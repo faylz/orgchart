@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Org Chart Editor</title>
+<meta name="description" content="An organization chart editor -- edit details and change relationships." />
+<!-- Copyright 1998-2016 by Northwoods Software Corporation. -->
+<meta charset="UTF-8">
+<script src="../release/go-debug.js"></script>
+<link href="../assets/css/goSamples.css" rel="stylesheet" type="text/css"/>  <!-- you don't need to use this -->
+<!--script src="goSamples.js"></script>  <!-- this is only for the GoJS Samples framework -->
+<script src="dev.js"></script>  <!-- this is only for the GoJS Samples framework -->
+
+<link rel='stylesheet' href='../extensions/dataInspector.css' />
+<script src="../extensions/dataInspector.js"></script>
+
+<script id="code">
+  
+</script>
+</head>
+<body onload="init()">
+<div id="sample">
+  <div id="myDiagramDiv" style="background-color: #696969; border: solid 1px black; height: 500px"></div>
+  <div>
+    <div id="myInspector">
+
+    </div>
+  </div>
+  <p>
+    This editable organizational chart sample color-codes the Nodes according to the tree level in the hierarchy.
+  </p>
+  <p>
+    Double click on a node in order to add a person or the diagram background to add a new boss. Double clicking the diagram uses the <a>ClickCreatingTool</a>
+    with a custom <a>ClickCreatingTool.insertPart</a> to assign an ID.
+  </p>
+  <p>
+    Drag a node onto another in order to change relationships.
+    You can also draw a link from a node's background to other nodes that have no "boss". Links can also be relinked to change relationships.
+    Right-click or tap-hold a Node to bring up a context menu which allows you to:
+    <ul>
+      <li>Vacate Position - remove the information specfic to the current person in that role</li>
+      <li>Remove Role - removes the role entirely and reparents any children</li>
+      <li>Remove Department - removes the role and the whole subtree</li>
+    </ul>
+    Deleting a Node or Link will orphan the child Nodes and generate a new tree. A custom SelectionDeleting <a>DiagramEvent</a> listener will clear out the boss info
+    when the parent becomes undefined.
+  </p>
+  <p>
+    Select a node to edit/update node data values. This sample uses the <a href="../extensions/dataInspector.html">Data Inspector</a> extension to display and modify Part data.
+  </p>
+  <p>
+    To learn how to build an org chart from scratch with GoJS, see the <a href="../learn/index.html">Getting Started tutorial</a>.
+  </p>
+  <div>
+    <div>
+      <button id="SaveButton" onclick="save()">Save</button>
+      <button onclick="load()">Load</button>
+      Diagram Model saved in JSON format:
+    </div>
+    <textarea id="mySavedModel" style="width:100%;height:250px">
+{
+    "class": "go.TreeModel",
+    "nodeDataArray": [
+        {
+            "key": "1",
+            "name": "金科地产股份有限公司",
+            "count": "11000人",
+            "category": "group"
+        },
+        {
+            "key": "2",
+            "name": "重庆区域公司",
+            "count": "1128人",
+            "manager": "喻林强",
+            "position": "董事长",
+            "parent": "1",
+            "category": "company"
+        },
+        {
+            "key": "3",
+            "name": "重庆区域公司",
+            "count": "0",
+            "manager": "梁梅君",
+            "position": "开发副总经理",
+            "parent": "2",
+            "category": "manager"
+        },
+        {
+            "key": "4",
+            "name": "重庆区域公司",
+            "count": "0",
+            "manager": "易小云",
+            "position": "财务副总经理",
+            "parent": "2",
+            "category": "manager"
+        },
+        {
+            "key": "5",
+            "name": "人力资源与行政部",
+            "count": "18人",
+            "manager": "赵小兰",
+            "position": "人力副总监",
+            "parent": "4",
+            "category": "company"
+        },
+        {
+            "key": "6",
+            "name": "主城开发部",
+            "count": "20人",
+            "manager": "张小凡",
+            "position": "开发副总监",
+            "parent": "4",
+            "category": "company"
+        },
+        {
+            "key": "7",
+            "name": "人力组",
+            "count": "10人",
+            "manager": "廖淋",
+            "position": "人力副经理",
+            "parent": "5",
+            "category": "company"
+        },
+        {
+            "key": "8",
+            "name": "行政组",
+            "count": "8人",
+            "manager": "林子大",
+            "position": "行政副经理",
+            "parent": "5",
+            "category": "company"
+        }
+    ]
+}
+    </textarea>
+  </div>
+</div>
+</body>
+</html>
