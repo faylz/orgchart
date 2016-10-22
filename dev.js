@@ -39,45 +39,6 @@
       }
     });
 
-    // manage boss info manually when a node or link is deleted from the diagram
-    myDiagram.addDiagramListener("SelectionDeleting", function(e) {
-      var part = e.subject.first(); // e.subject is the myDiagram.selection collection,
-                                    // so we'll get the first since we know we only have one selection
-      myDiagram.startTransaction("clear boss");
-      if (part instanceof go.Node) {
-        var it = part.findTreeChildrenNodes(); // find all child nodes
-        while(it.next()) { // now iterate through them and clear out the boss information
-          var child = it.value;
-          var bossText = child.findObject("boss"); // since the boss TextBlock is named, we can access it by name
-          if (bossText === null) return;
-          bossText.text = undefined;
-        }
-      } else if (part instanceof go.Link) {
-        var child = part.toNode;
-        var bossText = child.findObject("boss"); // since the boss TextBlock is named, we can access it by name
-        if (bossText === null) return;
-        bossText.text = undefined;
-      }
-      myDiagram.commitTransaction("clear boss");
-    });
-
-    var levelColors = ["#fff/#fff"];
-
-    // override TreeLayout.commitNodes to also modify the background brush based on the tree depth level
-    myDiagram.layout.commitNodes = function() {
-      go.TreeLayout.prototype.commitNodes.call(myDiagram.layout);  // do the standard behavior
-      // then go through all of the vertexes and set their corresponding node's Shape.fill
-      // to a brush dependent on the TreeVertex.level value
-      myDiagram.layout.network.vertexes.each(function(v) {
-        if (v.node) {
-          var level = v.level % (levelColors.length);
-          var colors = levelColors[0].split("/");
-          var shape = v.node.findObject("SHAPE");
-          if (shape) shape.fill = $(go.Brush, "Linear", { 0: colors[0], 1: colors[1], start: go.Spot.Left, end: go.Spot.Right });
-        }
-      });
-    };
-
     // This function is used to find a suitable ID when modifying/creating nodes.
     // We used the counter combined with findNodeDataForKey to ensure uniqueness.
     function getNextKey() {
@@ -94,13 +55,35 @@
     function textStyle() {
       return { font: "9pt  Segoe UI,sans-serif", stroke: "black" };
     }
-
-    // This converter is used by the Picture.
-    function findHeadShot(key) {
-      if (key < 0 || key > 16) return "images/HSnopic.png"; // There are only 16 images on the server
-      return "images/HS" + key + ".png"
+	
+	function groupNodeNameTextStyle() {
+      return { font: "16pt  Arial,Microsoft YaHei,黑体,宋体,sans-serif", stroke: "black" };
     }
-
+	function companyNodeNameTextStyle() {
+      return { font: "14pt  Arial,Microsoft YaHei,黑体,宋体,sans-serif", stroke: "black" };
+    }
+	function companyManagerNameTextStyle() {
+      return { font: "13pt  宋体,sans-serif", stroke: "red" };
+    }
+	function positionNameTextStyle() {
+      return { font: "12pt   Arial,Microsoft YaHei,黑体,sans-serif", stroke: "black" };
+    }
+	function positionManagerNameTextStyle() {
+      return { font: "12pt  宋体,sans-serif", stroke: "red" };
+    }
+	function deptNodeNameTextStyle() {
+      return { font: "10pt  Arial,Microsoft YaHei,黑体,宋体,sans-serif", stroke: "black" };
+    }
+	function deptManagerNameTextStyle() {
+      return { font: "10pt  宋体,sans-serif", stroke: "red" };
+    }
+	function deptManagerPositionNameTextStyle() {
+      return { font: "10pt  宋体,sans-serif", stroke: "red" };
+    }
+	function countTextStyle() {
+      return { font: "12pt  Arial, Helvetica, sans-serif", stroke: "red" };
+    }
+    
     // the context menu allows users to make a position vacant,
     // remove a role and reassign the subtree, or remove a department
     myDiagram.nodeTemplate.contextMenu =
@@ -163,7 +146,8 @@
 		$(go.Node, "Auto",
 		$(go.Shape, "Rectangle",
           {
-            name: "SHAPE", fill: "white", stroke: null,
+            name: "SHAPE", fill: "white", stroke: "blue",strokeWidth: 2, 
+		
             // set the port properties:
             portId: "", fromLinkable: true, toLinkable: true, cursor: "pointer"
           }),
@@ -172,18 +156,17 @@
 			  $(go.Panel, "Table",
 				{
 				  maxSize: new go.Size(400, 999),
-				  margin: new go.Margin(6, 10, 0, 3),
+				  margin: new go.Margin(15, 5, 10, 5),
 				  defaultAlignment: go.Spot.Left
 				},
 				$(go.RowColumnDefinition, { column: 2, width: 4 }),
-				$(go.TextBlock, textStyle(),  // the name
+				$(go.TextBlock, groupNodeNameTextStyle(),  // the name
 				  {
 					row: 0, column: 0,
-					font: "12pt Segoe UI,sans-serif",
 					minSize: new go.Size(10, 16)
 				  },
 				   new go.Binding("text", "name").makeTwoWay()),
-				$(go.TextBlock, "Title: ", textStyle(),
+				$(go.TextBlock, "count: ", countTextStyle(),
 				  { row: 0, column: 1 ,
 					font:"red",
 				  },	  
@@ -194,27 +177,160 @@
    
 	var companyOrgNodeTemplate =
 		$(go.Node, "Auto",
-		  $(go.TextBlock,
-			new go.Binding("text", "key")),
-		  $(go.TextBlock,
-			new go.Binding("text", "name")),
-		  $(go.TextBlock,
-			new go.Binding("text", "count")),
-		  $(go.TextBlock,
-			new go.Binding("text", "manager")),
-		  $(go.TextBlock,
-			new go.Binding("text", "position"))
+		$(go.Shape, "Rectangle",
+          {
+            name: "SHAPE", fill: "white", stroke: "lightblue",strokeWidth: 2, 
+		
+            // set the port properties:
+            portId: "", fromLinkable: true, toLinkable: true, cursor: "pointer"
+          }),
+		  $(go.Panel, "Vertical",
+
+			  $(go.Panel, "Table",
+				{
+				  maxSize: new go.Size(400, 25),
+				  margin: new go.Margin(5, 5, 1, 5),
+				  defaultAlignment: go.Spot.Center
+				},
+				$(go.RowColumnDefinition, { column: 2, width: 4 }),
+				$(go.TextBlock, companyNodeNameTextStyle(),  // the name
+				  {
+					row: 0, column: 0,
+					minSize: new go.Size(10, 16)
+				  },
+				   new go.Binding("text", "name").makeTwoWay()),
+				$(go.TextBlock, "count: ", countTextStyle(),
+				  { row: 0, column: 1 ,
+					minSize: new go.Size(10, 16),
+				  },	  
+					new go.Binding("text", "count"))
+				),
+			 $(go.Panel, "Table",
+				{
+				  maxSize: new go.Size(400, 25),
+				  margin: new go.Margin(5, 5, 1, 5),
+				  defaultAlignment: go.Spot.Center
+				},
+				$(go.RowColumnDefinition, { column: 3}),
+				$(go.TextBlock, companyManagerNameTextStyle(),  // the name
+				  {
+					row: 0, column: 0,
+					minSize: new go.Size(10, 16),
+					textAlign:"right"
+				  },
+				   new go.Binding("text", "manager").makeTwoWay()),
+			    $(go.TextBlock,  // the name
+				 {
+					row: 0, column: 1,
+					minSize: new go.Size(5, 5),
+					textAlign:"center"
+				 }),
+				$(go.TextBlock, "count: ", companyManagerNameTextStyle(),
+				  { row: 0, column: 2 ,
+					minSize: new go.Size(10, 16),
+					textAlign:"left"
+				  },	  
+					new go.Binding("text", "position"))
+				)
+			)
 		 );
 	
 	
-    var managerNodeTemplate =$(go.Node, "Auto",
-		  $(go.TextBlock,
-			new go.Binding("text", "key")),
-			$(go.TextBlock,
-			new go.Binding("text", "position")),
-			$(go.TextBlock,
-			new go.Binding("text", "manager"))
-		 ); // end Node
+    var managerNodeTemplate =
+	   $(go.Node, "Auto",
+		$(go.Shape, "Rectangle",
+          {
+            name: "SHAPE", fill: "orange", stroke: "lightblue",strokeWidth: 2, 
+            // set the port properties:
+            portId: "", fromLinkable: true, toLinkable: true, cursor: "pointer"
+          }),
+		  $(go.Panel, "Vertical",
+
+			  $(go.Panel, "Table",
+				{
+				  maxSize: new go.Size(400, 50),
+				 
+				  defaultAlignment: go.Spot.Center
+				},
+				$(go.RowColumnDefinition, { column: 1,row:3}),
+				
+				$(go.TextBlock, positionNameTextStyle(),  // the name
+				  {
+					row: 0, column: 0,
+					minSize: new go.Size(10, 16),
+					margin:new go.Margin(5, 5, 1, 5)
+				  },
+				   new go.Binding("text", "position").makeTwoWay()),
+				    
+				$(go.TextBlock, "manager", positionManagerNameTextStyle(),
+				  { row: 2, column: 0 ,
+					minSize: new go.Size(10, 16),
+					margin:new go.Margin(5, 5, 1, 5)
+				  },	  
+					new go.Binding("text", "manager"))
+			   )
+			)
+			);
+	var deptOrgNodeTemplate =
+		$(go.Node, "Auto",
+		$(go.Shape, "Rectangle",
+          {
+            name: "SHAPE", fill: "white", stroke: "lightblue",strokeWidth: 2, 
+		
+            // set the port properties:
+            portId: "", fromLinkable: true, toLinkable: true, cursor: "pointer"
+          }),
+		  $(go.Panel, "Vertical",
+
+			  $(go.Panel, "Table",
+				{
+				  maxSize: new go.Size(400, 25),
+				  margin: new go.Margin(5, 5, 1, 5),
+				  defaultAlignment: go.Spot.Center
+				},
+				$(go.RowColumnDefinition, { column: 2, width: 4 }),
+				$(go.TextBlock, deptNodeNameTextStyle(),  // the name
+				  {
+					row: 0, column: 0,
+					minSize: new go.Size(10, 16)
+				  },
+				   new go.Binding("text", "name").makeTwoWay()),
+				$(go.TextBlock, "count", countTextStyle(),
+				  { row: 0, column: 1 ,
+					minSize: new go.Size(10, 16),
+				  },	  
+					new go.Binding("text", "count"))
+				),
+			 $(go.Panel, "Table",
+				{
+				  maxSize: new go.Size(400, 25),
+				  margin: new go.Margin(5, 5, 1, 5),
+				  defaultAlignment: go.Spot.Center
+				},
+				$(go.RowColumnDefinition, { column: 3}),
+				$(go.TextBlock, deptManagerNameTextStyle(),  // the name
+				  {
+					row: 0, column: 0,
+					minSize: new go.Size(10, 16),
+					textAlign:"right"
+				  },
+				   new go.Binding("text", "manager").makeTwoWay()),
+			    $(go.TextBlock,  // the name
+				 {
+					row: 0, column: 1,
+					minSize: new go.Size(5, 5),
+					textAlign:"center"
+				 }),
+				$(go.TextBlock, "count: ", deptManagerPositionNameTextStyle(),
+				  { row: 0, column: 2 ,
+					minSize: new go.Size(10, 16),
+					textAlign:"left"
+				  },	  
+					new go.Binding("text", "position"))
+				)
+			)
+		 );
+		 
 	  
 	  // create the nodeTemplateMap, holding three node templates:
 	  var templmap = new go.Map("string", go.Node);
@@ -222,6 +338,7 @@
 	  templmap.add("group", groupOrgNodeTemplate);
 	  templmap.add("company", companyOrgNodeTemplate);
 	  templmap.add("manager", managerNodeTemplate);
+	  templmap.add("dept", deptOrgNodeTemplate);
 	  // for the default category, "", use the same template that Diagrams use by default;
 	  // this just shows the key value as a simple TextBlock
 	  myDiagram.nodeTemplateMap = templmap;
@@ -230,8 +347,8 @@
     // define the Link template
     myDiagram.linkTemplate =
       $(go.Link, go.Link.Orthogonal,
-        { corner: 5, relinkableFrom: true, relinkableTo: true },
-        $(go.Shape, { strokeWidth: 4, stroke: "#00a4a4" }));  // the link shape
+        { corner: 0, relinkableFrom: true, relinkableTo: true },
+        $(go.Shape, { strokeWidth: 1, stroke: "#000" }));  // the link shape
 
     // read in the JSON-format data from the "mySavedModel" element
     load();
